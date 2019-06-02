@@ -1,0 +1,210 @@
+import java.io.*;
+import java.util.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class Project{
+	static int cont = 0;
+	static ArrayList<Byte> nueva;
+
+	public static void main(String[] args)throws IOException  {
+
+		String foto = "9.bmp";
+		FileInputStream entrada = new FileInputStream(foto);
+		FileOutputStream salida = new FileOutputStream("finprueba.bmp",false);
+		File imagen = new File(foto);
+		int tamanio = (int) imagen.length();
+		byte[] bitmap = new byte[tamanio];
+		entrada.read(bitmap);
+		entrada.close();
+		int inicio = getComienzo(bitmap);
+		int anchura = getAnchura(bitmap);
+		int x = 0;
+		if(anchura%2!=0)  x = (anchura/2) + 2; //Más un pixel.;
+		else x = anchura/2;
+		int pixels = tamanio-inicio;
+		//Grafico window = new Grafico("Proyecto. Asignacion: 2");
+		byte[] cabecera = biuldHeader(bitmap,inicio-1);
+
+		ArrayList<Byte> newImage = new ArrayList<Byte>();
+		
+		System.out.println();
+		System.out.println("Inicio: "+inicio);
+		System.out.println("Anchura: "+anchura);
+		System.out.println("X: "+x);
+		System.out.println("Pixeles: "+pixels);
+		
+		firstC(bitmap,pixels,tamanio,x,inicio,newImage);
+		//secondC(bitmap,pixels,tamanio,x,inicio,newImage);
+		//thirdC(bitmap,pixels,tamanio,x,inicio,newImage);
+		//fourthC(bitmap,pixels,tamanio,x,inicio,newImage);
+		//salida.write(bitmap);
+
+		setFileLength(cabecera,cabecera.length);
+		setX(cabecera);
+		setY(cabecera);
+		setImageLength(cabecera);
+
+	}//Fin del main.
+
+	public static int getComienzo(byte[] bitmap){
+		int inicio = 0;
+		String hexTam = null;
+
+		for(int i=10;i<14;i++) //Obtengo el signed int de los 4 bytes.
+			inicio+=bitmap[i];
+
+		hexTam = Integer.toHexString(inicio); //Lo paso a su representación hexadecimal.
+
+		String hexNum = hexTam.substring(hexTam.length()-2,hexTam.length()); //Me quedo con los importantes.
+
+		inicio = 0;
+		int potencia = 0;
+		for(int i = 0;i<hexNum.length();i++){
+			potencia = (int) Math.pow(16,i);
+
+			if( hexNum.charAt((hexNum.length()-1)-i)=='a' || hexNum.charAt((hexNum.length()-1)-i)=='b' || hexNum.charAt((hexNum.length()-1)-i)=='c' || hexNum.charAt((hexNum.length()-1)-i)=='d' || hexNum.charAt((hexNum.length()-1)-i)=='e' || hexNum.charAt((hexNum.length()-1)-i)=='f'){
+				inicio = inicio +( potencia * (hexNum.charAt((hexNum.length()-1)-i)) - 87);
+			}
+			else inicio = inicio + potencia * ( hexNum.charAt((hexNum.length()-1)-i) - 48);
+		}
+
+		return inicio; //Devuelvo el byte en donde comienza la imagen, en  valor en entero.
+	}
+
+	private static void firstC(byte[] bitmap,int pixels, int tamanio, int x,int inicio,ArrayList imagen){
+		cont = 0;
+
+		System.out.println(); System.out.println();
+
+		System.out.println("comenzamos: "+inicio);
+
+		for(int i=inicio;i<(pixels/2)+inicio;i++){
+			if(cont == x){
+				System.out.println(i);
+				i+=x;
+				cont = 0;
+				System.out.println(i);
+			}
+
+			bitmap[i] = (byte)0x00;
+			cont++;		
+		}
+	}
+
+	private static void secondC(byte[] bitmap,int pixels, int tamanio, int x, int inicio,ArrayList imagen){
+		cont = 0;
+		for(int i=inicio+x;i<(pixels)/2;i++){
+			if(cont == x){
+				i+=x;
+				cont = 0;
+			}
+
+			bitmap[i] = (byte)0x00;
+			cont++;	
+		}
+	}
+	private static void thirdC(byte[] bitmap,int pixels, int tamanio, int x, int inicio,ArrayList imagen){
+		cont = 0;
+		for(int i=((pixels)/2+inicio)-x;i<(tamanio);i++){
+			bitmap[i] = (byte)0x00;
+			cont++;
+
+			if(cont == x){
+				i+=x;
+				cont = 0;
+			}	
+		}
+	}
+	private static void fourthC(byte[] bitmap,int pixels, int tamanio, int x, int inicio,ArrayList imagen){
+		cont = 0;
+		for(int i=(pixels)/2+inicio;i<(tamanio);i++){	
+			bitmap[i] = (byte)0x00;
+			cont++;
+
+			if(cont == x){
+				i+=x;
+				cont = 0;
+			}
+		}
+	}
+	public static int getAnchura(byte[] hola){
+		int ancho = 0;
+		//String anchura = "";
+		String anchHex = null;
+
+		for(int i=18;i<22;i++)
+			ancho+=hola[i];
+
+		anchHex = Integer.toHexString(ancho);
+		anchHex = anchHex.substring(anchHex.length()-2,anchHex.length());
+
+		ancho = 0;
+		int potencia = 0;
+		for(int i = 0;i<anchHex.length();i++){
+			potencia = (int) Math.pow(16,i);
+
+			if( anchHex.charAt((anchHex.length()-1)-i)=='a' || anchHex.charAt((anchHex.length()-1)-i)=='b' || anchHex.charAt((anchHex.length()-1)-i)=='c' || anchHex.charAt((anchHex.length()-1)-i)=='d' || anchHex.charAt((anchHex.length()-1)-i)=='e' || anchHex.charAt((anchHex.length()-1)-i)=='f'){
+				ancho = ancho +( potencia * (anchHex.charAt((anchHex.length()-1)-i)) - 87);
+			}
+			else ancho = ancho + potencia * ( anchHex.charAt((anchHex.length()-1)-i) - 48);
+		}
+
+		return ancho*3;
+	}
+
+	public static byte[] biuldHeader(byte[] bitmap,int limite){
+		byte[] cabecera = new byte[limite];
+		for(int i=0;i<limite;i++)
+			cabecera[i] = bitmap[i];
+
+		return cabecera;
+	}
+}
+
+
+class Grafico{
+	public JRadioButton [] opciones = new JRadioButton[4];
+	public JButton generar;
+	public JTextField entrada;
+	public JFrame ventana;
+	public ButtonGroup grupo = new ButtonGroup();
+
+	Grafico(String nombre){
+
+		ventana = new JFrame(nombre);
+		ventana.setPreferredSize(new Dimension(280,500));
+		ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		ventana.setLayout(new FlowLayout());
+		ventana.setResizable(false);
+		generar = new JButton("Crear.");
+		entrada = new JTextField("",15);
+		for(int i=0;i<4;i++){
+			opciones[i] = new JRadioButton();
+			grupo.add(opciones[i]);
+		}
+		setup();
+	}
+
+	private void setup(){
+		ventana.add(new JLabel("Nombre de la imagen .bmp"));
+		ventana.add(entrada);
+		ventana.add(new JLabel("Primero Cuadrante ( I ) \t"));
+		ventana.add(opciones[0]);
+		ventana.add(new JLabel (new ImageIcon( (new Object()).getClass().getResource("/primer.png"))) );
+		ventana.add(new JLabel("Segundo Cuadrante ( II ) \t"));
+		ventana.add(opciones[1]);
+		ventana.add(new JLabel (new ImageIcon( (new Object()).getClass().getResource("/segundo.png"))) );
+		ventana.add(new JLabel("Tercer Cuadrante ( III ) \t"));
+		ventana.add(opciones[2]);
+		ventana.add(new JLabel (new ImageIcon( (new Object()).getClass().getResource("/tercero.png"))) );
+		ventana.add(new JLabel("Cuarto Cuadrante ( IV )  \t"));
+		ventana.add(opciones[3]);
+		ventana.add(new JLabel (new ImageIcon( (new Object()).getClass().getResource("/cuarto.png"))) );
+		ventana.add(new JLabel(" "));
+		ventana.add(generar);
+		ventana.pack();
+		ventana.setVisible(true);
+	}
+}
